@@ -37,10 +37,12 @@ if(OATPP_INSTALL)
     include("../cmake/module-install.cmake")
 
     ## install swagger-ui files
-    install(DIRECTORY ../res
-            DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/oatpp-${OATPP_MODULE_VERSION}/bin/${OATPP_MODULE_NAME}"
-            FILES_MATCHING PATTERN "*.*"
-    )
+    if(NOT OATPP_WITHOUT_INSTALL_ALL)
+        install(DIRECTORY ../res
+                DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/oatpp-${OATPP_MODULE_VERSION}/bin/${OATPP_MODULE_NAME}"
+                FILES_MATCHING PATTERN "*.*"
+        )
+    endif()
 
     ## set environment variable to point to swagger-ui res files
     set(ENV{OATPP_SWAGGER_RES_PATH} "${CMAKE_INSTALL_INCLUDEDIR}/oatpp-${OATPP_MODULE_VERSION}/bin/${OATPP_MODULE_NAME}/res")
