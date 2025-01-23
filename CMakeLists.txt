@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.1...3.15 FATAL_ERROR)
 
 ###################################################################################################
 ## These variables are passed to oatpp-module-install.cmake script
@@ -24,13 +24,23 @@ option(OATPP_BUILD_TESTS "Build tests for this module" ON)
 option(OATPP_INSTALL "Install module binaries" ON)
 option(OATPP_MSVC_LINK_STATIC_RUNTIME "MSVC: Link with static runtime (/MT and /MTd)." OFF)
 
-set(OATPP_MODULES_LOCATION "INSTALLED" CACHE STRING "Location where to find oatpp modules. can be [INSTALLED|EXTERNAL|CUSTOM]")
+option(OATPP_WITH_SHARED_LIBRARIES "Build shared version of the Oatpp libraries." OFF)
+option(OATPP_WITH_VERBOSE_MESSAGE "Build Oatpp with verbose message." OFF)
+option(OATPP_WITHOUT_INSTALL_ALL "Build Oatpp without installing all artifacts." OFF)
+if(OATPP_WITH_SHARED_LIBRARIES)
+    set(BUILD_SHARED_LIBS ON)
+else()
+    set(BUILD_SHARED_LIBS OFF)
+endif()
+
+set(OATPP_MODULES_LOCATION "SIBLING" CACHE STRING "Location where to find oatpp modules. can be [INSTALLED|EXTERNAL|SIBLING|CUSTOM]")
 
 ###################################################################################################
 ## get oatpp main module in specified location
 
 set(OATPP_MODULES_LOCATION_INSTALLED INSTALLED)
 set(OATPP_MODULES_LOCATION_EXTERNAL EXTERNAL)
+set(OATPP_MODULES_LOCATION_SIBLING SIBLING)
 set(OATPP_MODULES_LOCATION_CUSTOM CUSTOM)
 
 if(OATPP_MODULES_LOCATION STREQUAL OATPP_MODULES_LOCATION_INSTALLED)
@@ -42,8 +52,30 @@ if(OATPP_MODULES_LOCATION STREQUAL OATPP_MODULES_LOCATION_INSTALLED)
     get_target_property(OATPP_INCLUDE oatpp::oatpp INTERFACE_INCLUDE_DIRECTORIES)
     message("OATPP_INCLUDE=${OATPP_INCLUDE}")
 
-    get_target_property(OATPP_TEST_INCLUDE oatpp::oatpp-test INTERFACE_INCLUDE_DIRECTORIES)
-    message("OATPP_TEST_INCLUDE=${OATPP_TEST_INCLUDE}")
+    if(OATPP_BUILD_TESTS)
+        get_target_property(OATPP_TEST_INCLUDE oatpp::oatpp-test INTERFACE_INCLUDE_DIRECTORIES)
+        message("OATPP_TEST_INCLUDE=${OATPP_TEST_INCLUDE}")
+    endif()
+
+elseif(OATPP_MODULES_LOCATION STREQUAL OATPP_MODULES_LOCATION_SIBLING)
+
+    if(OATPP_WITH_VERBOSE_MESSAGE)
+        message("Finding oatpp in location=SIBLING")
+    endif()
+
+    find_package(SiblingOatpp REQUIRED)
+
+    get_target_property(OATPP_INCLUDE oatpp::oatpp INTERFACE_INCLUDE_DIRECTORIES)
+    if(OATPP_WITH_VERBOSE_MESSAGE)
+        message("OATPP_INCLUDE=${OATPP_INCLUDE}")
+    endif()
+
+    if(OATPP_BUILD_TESTS)
+        get_target_property(OATPP_TEST_INCLUDE oatpp::oatpp-test INTERFACE_INCLUDE_DIRECTORIES)
+        if(OATPP_WITH_VERBOSE_MESSAGE)
+            message("OATPP_TEST_INCLUDE=${OATPP_TEST_INCLUDE}")
+        endif()
+    endif()
 
 elseif(OATPP_MODULES_LOCATION STREQUAL OATPP_MODULES_LOCATION_EXTERNAL)
 
@@ -88,20 +120,22 @@ endif()
 ###################################################################################################
 ## get dependencies
 
-message("\n############################################################################")
-message("## ${OATPP_THIS_MODULE_NAME} module. Resolving dependencies...\n")
+if(OATPP_WITH_VERBOSE_MESSAGE)
+    message("\n############################################################################")
+    message("## ${OATPP_THIS_MODULE_NAME} module. Resolving dependencies...\n")
 
-## TODO find dependecies here (if some)
+    ## TODO find dependecies here (if some)
 
-message("\n############################################################################\n")
+    message("\n############################################################################\n")
+endif()
 
 ###################################################################################################
 ## define targets
 
 include(cmake/module-utils.cmake)
 
-include(cmake/msvc-runtime.cmake)
-configure_msvc_runtime()
+#include(cmake/msvc-runtime.cmake)
+#configure_msvc_runtime()
 
 add_subdirectory(src)
 
